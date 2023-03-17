@@ -1,4 +1,5 @@
 <html>
+<meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
 <head>
     <script type="text/javascript" src="../BrowserPrint-3.0.216.min.js"></script>
@@ -50,6 +51,57 @@
         }
 
         function writeToSelectedPrinter(dataToWrite) {
+            selected_device.send(dataToWrite, undefined, errorCallback);
+        }
+
+        function printZPL(type) {
+            let dataToWrite = '^XA^FO200,200^A0N36,36^FDTest Label^FS^XZ'
+            if (type === 1){
+
+                // 1.条码
+                let barcode = [
+                    `^FO10,20`,     // 打印位置
+                    `^BCN,50,Y`,    // 条码配置项
+                    `^FD12345678`,  // 条码内容
+                    `^FS`          // Ends the current field and starts the next field
+                ]
+                // 2.文字
+                let text = [
+                    `^FO10,100`,    // 打印位置
+                    `^A0N,25,25`,   // 字体类型、大小
+                    `^FD hello world SN:41345/BQAD1A1QY00001`,  // 文字内容
+                    `^FS`          // Ends the current field and starts the next field
+                ]
+                // 3.边框
+                let border = [
+                    `^FO0,0`,     // 打印位置
+                    `^GB800,200,3`, // 边框配置项
+                    `^FS`          // Ends the current field and starts the next field
+                ]
+                // 4.边框
+                let borderStatus = [
+                    `^FO0,150`,     // 打印位置
+                    `^GB150,50,3`, // 边框配置项
+                    `^FS`          // Ends the current field and starts the next field
+                ]
+                // 4.文本
+                let textStatus = [
+                    `^FO0,170`,    // 打印位置
+                    `^A0N,25,25`,   // 字体类型、大小
+                    `^FD status:status`,  // 文字内容
+                    `^FS`          // Ends the current field and starts the next field
+                ]
+                // let zplList = barcode.concat(...text,...border)
+                let zplList = [
+                    ...barcode,
+                    ...text,
+                    ...border,
+                    ...borderStatus,
+                    ...textStatus,
+                ]
+                dataToWrite = `^XA${zplList.join('')}^XZ`
+                // alert(dataToWrite)
+            }
             selected_device.send(dataToWrite, undefined, errorCallback);
         }
 
@@ -106,15 +158,46 @@
 Selected Device: <select id="selected_device" onchange=onDeviceSelected(this);></select>
 <!--  <input type="button" value="Change" onclick="changeDevice();">--> <br/><br/>
 <input type="button" value="Get Application Configuration" onclick="getConfig()"><br/><br/>
+
 <input type="button" value="Send Config Label" onclick="writeToSelectedPrinter('~wc')"><br/><br/>
-<!-- ! -->
-<input type="button" value="Send ZPL Label"
-       onclick="writeToSelectedPrinter('^XA^FO200,200^A0N36,36^FDTest Label^FS^XZ')"><br/><br/>
-<input type="button" value="Get Status" onclick="writeToSelectedPrinter('~hs'); readFromSelectedPrinter()"><br/><br/>
-<input type="button" value="Get Local Devices"
-       onclick="BrowserPrint.getLocalDevices(getDeviceCallback, errorCallback);"><br/><br/>
-<input type="text" name="write_text" id="write_text"><input type="button" value="Write"
-                                                            onclick="writeToSelectedPrinter(document.getElementById('write_text').value)"><br/><br/>
+
+<!-- !在线打印 -->
+<!--http://labelary.com/viewer.html?density=8&quality=grayscale&width=3&height=2&units=inches&index=0&rotation=0&zpl=%5EXA%0A%5EFO200%2C200%0A%5EA0N62%2C62%0A%5EFDTest%20Label%0A%5EFS%0A%5EXZ-->
+
+<!-- ! 发送打印指令 -->
+<input
+        type="button" value="Send ZPL Label"
+        onclick="writeToSelectedPrinter('^XA^FO200,200^A0N36,36^FDTest Label^FS^XZ')">
+<br/><br/>
+
+<!-- ! 打印测试 -->
+<input onclick="printZPL(1)" style="color: red" type="button" value="打印条码A">
+
+
+<br/><br/>
+
+
+<!-- 获取打印机状态 -->
+<input
+        type="button"
+        value="Get Status"
+        onclick="writeToSelectedPrinter('~hs'); readFromSelectedPrinter()">
+<br/><br/>
+<input
+        type="button" value="Get Local Devices"
+        onclick="BrowserPrint.getLocalDevices(getDeviceCallback, errorCallback);"><br/><br/>
+
+<input
+        type="text"
+        name="write_text"
+        id="write_text"
+>
+<!-- 打印选择文本 -->
+<input
+        type="button"
+        value="Write"
+        onclick="writeToSelectedPrinter(document.getElementById('write_text').value)">
+<br/><br/>
 <input type="button" value="Read" onclick="readFromSelectedPrinter()"><br/><br/>
 <input type="button" value="Send BMP" onclick="sendImage('Zebra_logobox.bmp');"><br/><br/>
 <input type="button" value="Send JPG" onclick="sendImage('ZebraGray.jpg');"><br/><br/>
